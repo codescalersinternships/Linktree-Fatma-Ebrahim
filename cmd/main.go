@@ -1,64 +1,164 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-type linktree struct{
-	ID string `json:"id"`
-	Username string `json:"username"`
-	Email string `json:"email"`
-	Password string `json:"password"`
-	Fullname string `json:"fullName"`
-	Bio string `json:"bio"`
-	Links []string `json:"links"`
-}
-var linktrees = []linktree{
-    {ID: "1", Username: "username1", Email: "email1@example.com", Password:"password_1",Fullname: "First1 Second1", Bio:"Bio bio1",Links:[]string{"https://www.google.com/","https://www.facebook.com/"}},
-    {ID: "2", Username: "username2", Email: "email2@example.com", Password:"password_2",Fullname: "First2 Second2", Bio:"Bio bio2",Links:[]string{"https://www.youtube.com/","https://www.twitter.com/"}},
-    {ID: "3", Username: "username3", Email: "email3@example.com", Password:"password_3",Fullname: "First3 Second3", Bio:"Bio bio3",Links:[]string{"https://www.github.com/","https://www.linkedin.com/"}},
-}
 
-//gin.context It carries request details, validates and serializes JSON, and more.
-func getLinktrees(c *gin.Context) {
-	// Context.IndentedJSON to serialize the struct into JSON and add it to the response.
-    c.IndentedJSON(http.StatusOK, linktrees)
-}
+var collection *mongo.Collection
+var ctx = context.TODO()
 
-func postLinktree(c *gin.Context) {
-    var newLinktree linktree
-
-    // Call BindJSON to bind the received JSON to newLinktree
-	if err:=c.BindJSON(&newLinktree); err!=nil{
+func init() {
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017/")
+	client, err := mongo.Connect(ctx, clientOptions)
+	if err != nil {
 		log.Fatal(err)
 	}
-	linktrees=append(linktrees, newLinktree)
 
-    c.IndentedJSON(http.StatusCreated, newLinktree)
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	collection = client.Database("linktree").Collection("linktrees")
+}
+
+var (
+	outfile, _ = os.Create("logs.log")
+	logger     = log.New(outfile, "", 0)
+)
+
+type linktree struct {
+	Username string   `bson:"username"`
+	Email    string   `bson:"email"`
+	Password string   `bson:"password"`
+	Fullname string   `bson:"fullName"`
+	Bio      string   `bson:"bio"`
+	Links    []string `bson:"links"`
+}
+
+
+func addLinktree_db(linktree linktree) (*mongo.InsertOneResult, error) {
+	result, err := collection.InsertOne(ctx, linktree)	
+	return  result ,err
+}
+
+func getLinktrees_db() ([]linktree, error) {
+    var linktrees []linktree
+	cur, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		return linktrees, err
+	}
+	for cur.Next(ctx) {
+		var l linktree
+		if err:= cur.Decode(&l) ;err!=nil{
+			return linktrees, err
+		}
+		linktrees = append(linktrees, l)
+	}
+	if err := cur.Err(); err != nil {
+		return linktrees, err
+	}
+	cur.Close(ctx)
+    return linktrees, err
+}
+
+func getLinktreebyID_db(id string) (linktree, error) {
+	var linktree linktree
+    ID, err := primitive.ObjectIDFromHex(id)
+    if err != nil {
+        return linktree, err
+    }
+    
+    err = collection.FindOne(ctx, bson.M{"_id": ID}).Decode(&linktree)
+    return linktree, err
+}
+
+
+
+
+func getLinktrees(c *gin.Context) {
+	linktrees,err:=getLinktrees_db()
+	if err!=nil{
+		c.IndentedJSON(http.StatusNotFound, err)
+	}
+	c.IndentedJSON(http.StatusOK, linktrees)
+}
+
+func addLinktree(c *gin.Context) {
+	var newLinktree linktree
+	if err := c.BindJSON(&newLinktree); err != nil {
+		log.Fatal(err)
+	}
+	result, err := addLinktree_db(newLinktree)
+	if err != nil {
+		log.Fatal(err)
+	}
+	c.IndentedJSON(http.StatusCreated, result)
 }
 
 func getLinktreeByID(c *gin.Context) {
-    id:=c.Param("id")
+	id:=c.Param("id")
+	fmt.Println(id)
+	linktree,err:=getLinktreebyID_db(id)
+	if err!=nil{
+		fmt.Println(err)
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, linktree)
 
-    for _, l := range linktrees{
-        if l.ID == id {
-            c.IndentedJSON(http.StatusOK, l)
-            return
-        }
-    }
-    c.IndentedJSON(http.StatusNotFound, gin.H{"message": "linktree not found"})
 }
 
 
+
+
+
+
+func addLink(c *gin.Context) {
+	var link string
+	if err := c.BindJSON(&link); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(link)
+	
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "linktree not found"})
+}
+
+func deleteLink(c *gin.Context) {
+	var link string
+	if err := c.BindJSON(&link); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(link)
+
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "linktree not found"})
+}
+
+func editLink(c *gin.Context) {
+
+}
+
+
+
 func main() {
-    router := gin.Default()
+	
+	router := gin.Default()
 	//associate the GET HTTP method and /albums path with a handler function.
-    router.GET("/linktrees", getLinktrees)
-	router.POST("/linktree",postLinktree)
-	router.GET("linktrees/:id",getLinktreeByID)
+	router.GET("/linktrees", getLinktrees)
+	router.POST("/linktree", addLinktree)
+	router.GET("linktrees/:id", getLinktreeByID)
+	router.POST("/linktree/:id", addLink)
+	router.DELETE("/linktree/:id", deleteLink)
 
 	//Run function attach the router to an http.Server and start the server.
-    router.Run("localhost:8080")
+	router.Run("localhost:8080")
 }
