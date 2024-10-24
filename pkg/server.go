@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -11,30 +11,40 @@ import (
 	"github.com/codescalersinternships/Linktree-Fatma-Ebrahim/models"
 	"github.com/codescalersinternships/Linktree-Fatma-Ebrahim/token"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+var user_id primitive.ObjectID
 
 func signup(c *gin.Context) {
 	var user models.User
 	if err := c.BindJSON(&user); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
 	}
+
 	tokenMaker := token.NewJWTMaker(os.Getenv("SECRET_KEY"))
-	tokenStr,_, err := tokenMaker.CreateToken(user.ID, user.Username, user.Email, user.Password, time.Hour*24)
+	user.ID = primitive.NewObjectID()
+	user_id = user.ID
+	tokenStr, _, err := tokenMaker.CreateToken(user.ID, user.Username, user.Email, user.Password, time.Hour*24)
 	user.Token = tokenStr
-	result, err := database.AddUser(user)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
 		return
 	}
-	fmt.Println(user.Token)
-	c.IndentedJSON(http.StatusCreated, result)
+	err = database.AddUser(&user)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
+	}
+
+	c.IndentedJSON(http.StatusCreated, user)
 
 }
 
 func authentication(c *gin.Context) {
 	clientToken := c.Request.Header.Get("token")
 	if clientToken == "" {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("No Authorization header provided")})
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("No Authorization header provided")})
 		c.Abort()
 		return
 	}
@@ -42,14 +52,12 @@ func authentication(c *gin.Context) {
 	claims, err := tokenMaker.VerifyToken(clientToken)
 
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("Invalid token")})
 		c.Abort()
 		return
 	}
+
 	c.Set("id", claims.ID)
-	c.Set("email", claims.Email)
-	c.Set("username", claims.Username)
-	c.Set("password", claims.Password)
 	c.Next()
 
 }
@@ -64,7 +72,42 @@ func login(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
 		return
 	}
-	c.IndentedJSON(http.StatusCreated, id)
+	c.IndentedJSON(http.StatusOK, id)
+	user_id = user.ID
+
+}
+
+func addLinktree(c *gin.Context) {
+	var newLinktree models.Linktree
+	if err := c.BindJSON(&newLinktree); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
+	}
+	for i := range newLinktree.Links {
+		newLinktree.Links[i].ID = primitive.NewObjectID()
+	}
+	err := database.AddLinktree(&newLinktree)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
+	}
+	user, err := database.AddTreeIDToUser(user_id, newLinktree.ID)
+
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
+	}
+	// c.IndentedJSON(http.StatusCreated, newLinktree)
+	c.IndentedJSON(http.StatusCreated, user)
+}
+
+func getLinktreeByID(c *gin.Context) {
+	id := c.Param("id")
+	linktree, err := database.GetLinktreebyID(id)
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, linktree)
 
 }
 
@@ -77,47 +120,20 @@ func getLinktrees(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, linktrees)
 }
 
-func addLinktree(c *gin.Context) {
-	var newLinktree models.Linktree
-	if err := c.BindJSON(&newLinktree); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
-	}
-	result, err := database.AddLinktree(newLinktree)
-	//database.AddTreeIDToUser()
-	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
-		return
-	}
-	c.IndentedJSON(http.StatusCreated, result)
-}
-
-
-
-func getLinktreeByID(c *gin.Context) {
-	id := c.Param("id")
-	fmt.Println(id)
-	linktree, err := database.GetLinktreebyID(id)
-	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("%v", err)})
-		return
-	}
-	c.IndentedJSON(http.StatusOK, linktree)
-
-}
-
 func addLinktoTree(c *gin.Context) {
 	id := c.Param("id")
 	var link models.Link
 
 	if err := c.BindJSON(&link); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
 	}
 	result, err := database.AddLink(id, link)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("%v", err)})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, result)
+	c.IndentedJSON(http.StatusCreated, result)
 }
 
 func addBiotoTree(c *gin.Context) {
@@ -126,6 +142,7 @@ func addBiotoTree(c *gin.Context) {
 
 	if err := c.BindJSON(&bio); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
 	}
 	result, err := database.AddBio(id, bio)
 	if err != nil {
@@ -150,37 +167,57 @@ func addFullnametoTree(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, result)
 }
 
-func updateLinkByName(c *gin.Context) {
+func updateLinkByID(c *gin.Context) {
 	id := c.Param("id")
 	var link models.Link
 
 	if err := c.BindJSON(&link); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
 	}
 
-	result, err := database.UpdateLinkByName(id, link)
+	result, err := database.UpdateLinkByID(id, link)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": fmt.Sprintf("%v", err)})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, result)
 }
+func deleteLinkByID(c *gin.Context) {
 
-func main() {
+	id := c.Param("id")
+	var link models.Link
+
+	if err := c.BindJSON(&link); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
+	}
+
+	result, err := database.DeleteLinkByID(id, link)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": fmt.Sprintf("%v", err)})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, result)
+}
+
+func Linktreeserver() *gin.Engine {
 
 	router := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
 
 	router.POST("/linktree/signup", signup)
 	router.POST("/linktree/login", login)
 	router.Use(authentication)
-
-	router.GET("/linktrees", getLinktrees)
 	router.POST("/linktree", addLinktree)
-	router.GET("linktrees/:id", getLinktreeByID)
+	router.GET("/linktree/:id", getLinktreeByID)
 	router.POST("/linktree/:id/addlink", addLinktoTree)
 	router.POST("/linktree/:id/addbio", addBiotoTree)
 	router.POST("/linktree/:id/addfullname", addFullnametoTree)
-	router.POST("/linktree/:id/updatelink", updateLinkByName)
+	router.POST("/linktree/:id/updatelink", updateLinkByID)
+	router.DELETE("/linktree/:id/deletelink", deleteLinkByID)
 
-	router.Run("localhost:8080")
+	router.GET("/linktrees", getLinktrees)
+
+	return router
 }
