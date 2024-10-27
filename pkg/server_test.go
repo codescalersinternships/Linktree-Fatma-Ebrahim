@@ -247,7 +247,7 @@ func TestLinkAPIs(t *testing.T) {
 
 		request.Header.Set("token", user.Token)
 		router.ServeHTTP(response, request)
-		assert.Equal(t, http.StatusCreated, response.Code)
+		assert.Equal(t, http.StatusOK, response.Code)
 	})
 
 	t.Run("test add links to tree with unauthorized user", func(t *testing.T) {
@@ -299,7 +299,7 @@ func TestLinkAPIs(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, got["message"], "mongo: no documents in result")
+		assert.Equal(t, got["Message"], "mongo: no documents in result")
 		assert.Equal(t, http.StatusNotFound, response.Code)
 	})
 
@@ -380,7 +380,7 @@ func TestLinkAPIs(t *testing.T) {
 		}
 
 		endpoint := fmt.Sprintf("/linktree/%s/updatelink", user.LinkTreeID.Hex())
-		request, err := http.NewRequest("POST", endpoint, bytes.NewReader(linkbytes))
+		request, err := http.NewRequest("PUT", endpoint, bytes.NewReader(linkbytes))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -469,7 +469,7 @@ func TestLinkAPIs(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, got["message"], "link not found in linktree")
+		assert.Equal(t, got["Message"], "link not found in linktree")
 		assert.Equal(t, http.StatusBadRequest, response.Code)
 		assert.Equal(t, 2, len(tree.Links))
 
