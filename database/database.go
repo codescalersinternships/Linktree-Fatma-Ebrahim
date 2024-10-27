@@ -44,58 +44,39 @@ func AddUser(user *models.User) error {
 	return err
 }
 
-func CheckUser(user models.User) (primitive.ObjectID, error) {
+func CheckUser(user models.User) (models.User, error) {
 	var existingUser models.User
 	user_col.FindOne(ctx, bson.M{"username": user.Username}).Decode(&existingUser)
 	if existingUser.Username != user.Username {
-		return primitive.NewObjectID(), fmt.Errorf("Unauthorized user")
+		return existingUser, fmt.Errorf("Unauthorized user")
 	}
 	if existingUser.Password != user.Password {
-		return primitive.NewObjectID(), fmt.Errorf("Wrong password")
+		return existingUser, fmt.Errorf("Wrong password")
 	}
-	return existingUser.ID, nil
+	return existingUser, nil
 }
 
-func AddLinktree(linktree *models.Linktree) error {
+func AddLinktree(linktree *models.Linktree, user_id primitive.ObjectID) (models.User, error) {
 
+	var existingUser models.User
 	result, err := linktree_col.InsertOne(ctx, linktree)
 	linktree.ID = result.InsertedID.(primitive.ObjectID)
-	return err
-}
-
-func AddTreeIDToUser(user_id primitive.ObjectID, linktree_id primitive.ObjectID) (models.User, error) {
-	var existingUser models.User
-	update := bson.M{"$set": bson.M{"linktree_id": linktree_id}}
-	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-	err := user_col.FindOneAndUpdate(ctx, bson.M{"_id": user_id}, update, opts).Decode(&existingUser)
 	if err != nil {
 		return existingUser, err
 	}
 
-	return existingUser, err
-}
-
-func GetLinktrees() ([]models.Linktree, error) {
-	var linktrees []models.Linktree
-	cur, err := linktree_col.Find(ctx, bson.M{})
+	update := bson.M{"$set": bson.M{"linktree_id": linktree.ID}}
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	err = user_col.FindOneAndUpdate(ctx, bson.M{"_id": user_id}, update, opts).Decode(&existingUser)
 	if err != nil {
-		return linktrees, err
+		return existingUser, err
 	}
-	for cur.Next(ctx) {
-		var l models.Linktree
-		if err := cur.Decode(&l); err != nil {
-			return linktrees, err
-		}
-		linktrees = append(linktrees, l)
-	}
-	if err := cur.Err(); err != nil {
-		return linktrees, err
-	}
-	cur.Close(ctx)
-	return linktrees, err
+	return existingUser, nil
+
 }
 
 func GetLinktreebyID(id string) (models.Linktree, error) {
+	fmt.Println("ID: ", id)
 	var linktree models.Linktree
 	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -142,7 +123,7 @@ func AddFullname(id string, fullname string) (models.Linktree, error) {
 	}
 	update := bson.M{"$set": bson.M{"fullname": fullname}}
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-	err = linktree_col.FindOneAndUpdate(ctx, bson.M{"_id": ID}, update,opts).Decode(&linktree)
+	err = linktree_col.FindOneAndUpdate(ctx, bson.M{"_id": ID}, update, opts).Decode(&linktree)
 	return linktree, err
 }
 
@@ -170,24 +151,21 @@ func UpdateLinkByID(id string, link models.Link) (models.Linktree, error) {
 }
 
 func DeleteLinkByID(id string, link models.Link) (models.Linktree, error) {
-    var linktree models.Linktree
-    ID, err := primitive.ObjectIDFromHex(id)
-    if err != nil {
-        return linktree, err
-    }
-    filter := bson.M{"_id": ID, "links._id": link.ID}
-    err = linktree_col.FindOne(ctx, filter).Decode(&linktree)
-    if err != nil {
-        if err == mongo.ErrNoDocuments {
-            return linktree, fmt.Errorf("link not found in linktree")
-        }
-        return linktree, err
-    }
-    update := bson.M{"$pull": bson.M{"links": bson.M{"_id": link.ID}}}
-    opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-    err = linktree_col.FindOneAndUpdate(ctx, bson.M{"_id": ID}, update, opts).Decode(&linktree)
-    return linktree, err
+	var linktree models.Linktree
+	ID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return linktree, err
+	}
+	filter := bson.M{"_id": ID, "links._id": link.ID}
+	err = linktree_col.FindOne(ctx, filter).Decode(&linktree)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return linktree, fmt.Errorf("link not found in linktree")
+		}
+		return linktree, err
+	}
+	update := bson.M{"$pull": bson.M{"links": bson.M{"_id": link.ID}}}
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	err = linktree_col.FindOneAndUpdate(ctx, bson.M{"_id": ID}, update, opts).Decode(&linktree)
+	return linktree, err
 }
-
-
-

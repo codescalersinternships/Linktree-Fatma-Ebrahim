@@ -24,3 +24,7 @@ type User struct {
 	Token      string             `bson:"token"`
 	LinkTreeID primitive.ObjectID `bson:"linktree_id,omitempty"`
 }
+
+type Error struct {
+	Message string `bson:"error"`
+}
