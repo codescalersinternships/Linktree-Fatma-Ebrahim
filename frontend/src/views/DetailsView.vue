@@ -19,3 +19,11 @@
         <router-link to="/tree"> tree</router-link>
     </div>
 </template>
+<style scoped>
+.details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+</style>
