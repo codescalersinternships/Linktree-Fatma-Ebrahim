@@ -10,8 +10,8 @@ import (
 func main(){
 	gin.SetMode(gin.ReleaseMode)
 	server:=server.Linktreeserver()
-	fmt.Println("server running on http://localhost:8080")
-	server.Run(":8080")
+	fmt.Println("server running on http://localhost:8000")
+	server.Run(":8000")
 
 
 }

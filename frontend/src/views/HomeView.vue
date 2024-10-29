@@ -69,6 +69,7 @@ p {
   margin-bottom: 20px;
   padding: 0px;
   font-size: 20px;
+  color:#F2F3EB;
 }
 
 .btns {

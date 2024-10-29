@@ -275,7 +275,7 @@ func authentication(c *gin.Context) {
 func Linktreeserver() *gin.Engine {
 
 	router := gin.Default()
-	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json")
+	url := ginSwagger.URL("http://localhost:8000/swagger/doc.json")
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	router.POST("/linktree/signup", signup)
 	router.POST("/linktree/login", login)

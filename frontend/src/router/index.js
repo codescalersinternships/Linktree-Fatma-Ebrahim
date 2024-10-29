@@ -44,4 +44,19 @@ const router = createRouter({
   routes
 })
 
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token");
+
+  if (to.path === "/login" || to.path === "/signup" || token) {
+    next();
+    console.log("Token found, allowing access");
+  } else {
+    console.log("No token found, redirecting to login");
+    next("/login");
+  }
+});
+
+
+
 export default router

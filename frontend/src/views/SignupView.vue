@@ -2,15 +2,47 @@
     <div class="signup">
         <img src="../assets/tree.svg" width="100" alt="logo">
         <h1>Sign up</h1>
-        <form class="form">
-            <input type="text" name="username" placeholder="Enter Username">
-            <input type="email" name="email" placeholder="Enter Email">
-            <input type="password" name="password" placeholder="Enter Password">
-            <router-link to="/details"><input class="btn" type="submit" value="Signup"> </router-link>
+        <form class="form" @submit.prevent="handlesubmit">
+            <input type="text" name="username" placeholder="Enter Username" v-model="user.username">
+            <input type="email" name="email" placeholder="Enter Email" v-model="user.email">
+            <input type="password" name="password" placeholder="Enter Password" v-model="user.password">
+            <input class="btn" type="submit" value="Signup">
         </form>
-        <router-link to="/details">signup</router-link>
     </div>
 </template>
+<script setup>
+import router from '@/router';
+import { reactive } from 'vue';
+const user = reactive({
+    username: "",
+    email: "",
+    password: ""
+})
+const handlesubmit = async () => {
+    try {
+        const response = await fetch("/linktree/signup", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(user)
+        })
+        if (response.status == 201) {
+            const data = await response.json()
+            localStorage.setItem("token", data.token)
+            router.push("/details")
+        } else if (response.status == 400) {
+            alert("User already exists, please login or try again")
+        }
+        console.log(response.status)
+    }
+    catch (err) {
+        console.log(err)
+    }
+
+}
+
+</script>
 <style scoped>
 .signup {
     padding: 0px;
@@ -25,8 +57,8 @@
 
 }
 
-img:hover{  
-    transform:rotate(-15deg);
+img:hover {
+    transform: rotate(-15deg);
     transition: 0.3s ease-in-out;
 }
 

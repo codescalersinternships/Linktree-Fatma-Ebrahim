@@ -2,15 +2,51 @@
     <div class="login">
         <img src="../assets/tree.svg" width="100" alt="logo">
         <h1>Login</h1>
-        <form class="form">
-            <input type="text" name="username" placeholder="Enter Username">
-            <input type="password" name="password" placeholder="Enter Password"> 
-            <router-link  to="/tree" ><input class="btn" type="submit" value="Login"> </router-link>
+        <form class="form" @submit.prevent="handlesubmit">
+            <input type="text" name="username" placeholder="Enter Username" v-model="user.username">
+            <input type="password" name="password" placeholder="Enter Password" v-model="user.password">
+            <input class="btn" type="submit" value="Login">
         </form>
-        <router-link  to="/tree" >login</router-link>
     </div>
 </template>
-<style  scoped>
+<script setup>
+import router from '@/router';
+import { reactive } from 'vue';
+const user = reactive({
+    username: "",
+    password: ""
+})
+const handlesubmit = async () => {
+    if (user.username == "" || user.password == "") {
+        alert("Empty fields, please enter username and password")
+    } else {
+        try {
+            const response = await fetch("/linktree/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(user)
+            })
+            if (response.status == 200) {
+                const data = await response.json()
+                localStorage.setItem("token", data.token)
+                router.push("/tree")
+            } else if (response.status == 400) {
+                alert("Unauthorized user, please sign up or try again")
+            }
+            console.log(response)
+        }
+        catch (err) {
+            console.log(err)
+        }
+    }
+
+}
+
+</script>
+
+<style scoped>
 .login {
     padding: 0px;
     margin: 0px;
@@ -25,8 +61,8 @@
 }
 
 
-img:hover{  
-    transform:rotate(-15deg);
+img:hover {
+    transform: rotate(-15deg);
     transition: 0.3s ease-in-out;
 }
 
