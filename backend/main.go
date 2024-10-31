@@ -7,11 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main(){
+// @securityDefinitions.apikey token
+// @in header
+// @name token
+
+func main() {
 	gin.SetMode(gin.ReleaseMode)
-	server:=server.Linktreeserver()
+	server := server.Linktreeserver()
 	fmt.Println("server running on http://localhost:8000")
 	server.Run(":8000")
-
 
 }

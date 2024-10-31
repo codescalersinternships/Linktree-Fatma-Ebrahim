@@ -92,11 +92,9 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/models.Error'
-      security:
-      - token: []
       summary: get a new linktree by ID
   /linktree/{id}/addbio:
-    post:
+    put:
       consumes:
       - application/json
       parameters:
@@ -126,7 +124,7 @@ paths:
       - token: []
       summary: add bio to linktree
   /linktree/{id}/addfullname:
-    post:
+    put:
       consumes:
       - application/json
       parameters:
@@ -156,7 +154,7 @@ paths:
       - token: []
       summary: add fullname to linktree
   /linktree/{id}/addlink:
-    post:
+    put:
       consumes:
       - application/json
       parameters:
@@ -185,6 +183,31 @@ paths:
       security:
       - token: []
       summary: add link to linktree
+  /linktree/{id}/addvisit:
+    put:
+      parameters:
+      - description: tree id
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: link id
+        in: header
+        name: link_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Linktree'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: update visits count for a link
   /linktree/{id}/deletelink:
     delete:
       consumes:
@@ -291,4 +314,9 @@ paths:
           schema:
             $ref: '#/definitions/models.Error'
       summary: signup a new user
+securityDefinitions:
+  token:
+    in: header
+    name: token
+    type: apiKey
 swagger: "2.0"

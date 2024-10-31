@@ -130,11 +130,6 @@ const docTemplate = `{
         },
         "/linktree/{id}": {
             "get": {
-                "security": [
-                    {
-                        "token": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -168,7 +163,7 @@ const docTemplate = `{
             }
         },
         "/linktree/{id}/addbio": {
-            "post": {
+            "put": {
                 "security": [
                     {
                         "token": []
@@ -216,7 +211,7 @@ const docTemplate = `{
             }
         },
         "/linktree/{id}/addfullname": {
-            "post": {
+            "put": {
                 "security": [
                     {
                         "token": []
@@ -264,7 +259,7 @@ const docTemplate = `{
             }
         },
         "/linktree/{id}/addlink": {
-            "post": {
+            "put": {
                 "security": [
                     {
                         "token": []
@@ -293,6 +288,44 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/models.Link"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Linktree"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/models.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/linktree/{id}/addvisit": {
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "update visits count for a link",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "tree id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "link id",
+                        "name": "link_id",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -476,6 +509,13 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "token": {
+            "type": "apiKey",
+            "name": "token",
+            "in": "header"
         }
     }
 }`

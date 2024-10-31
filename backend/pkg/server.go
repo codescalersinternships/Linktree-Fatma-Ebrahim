@@ -17,7 +17,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var user_id primitive.ObjectID
 
 // @Summary signup a new user
 // @Accept json
@@ -35,7 +34,6 @@ func signup(c *gin.Context) {
 
 	tokenMaker := token.NewJWTMaker(os.Getenv("SECRET_KEY"))
 	user.ID = primitive.NewObjectID()
-	user_id = user.ID
 	tokenStr, _, err := tokenMaker.CreateToken(user.ID, user.Username, user.Email, user.Password, time.Hour*24)
 	user.Token = tokenStr
 	if err != nil {
@@ -71,8 +69,6 @@ func login(c *gin.Context) {
 		return
 	}
 	c.IndentedJSON(http.StatusOK, checkeduser)
-	user_id = checkeduser.ID
-	fmt.Println(user_id)
 
 }
 
@@ -109,11 +105,9 @@ func addLinktree(c *gin.Context) {
 // @Param   id path string true "linktree id"
 // @Success 200 {object} models.Linktree
 // @Failure 404 {object} models.Error
-// @Security token
 // @Router /linktree/{id} [get]
 func getLinktreeByID(c *gin.Context) {
 	id := c.Param("id")
-	fmt.Println(id)
 	linktree, err := database.GetLinktreebyID(id)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, models.Error{Message: err.Error()})
@@ -131,7 +125,7 @@ func getLinktreeByID(c *gin.Context) {
 // @Success 200 {object} models.Linktree
 // @Failure 404 {object} models.Error
 // @Security token
-// @Router /linktree/{id}/addlink [post]
+// @Router /linktree/{id}/addlink [put]
 func addLinktoTree(c *gin.Context) {
 	id := c.Param("id")
 	var link models.Link
@@ -157,7 +151,7 @@ func addLinktoTree(c *gin.Context) {
 // @Success 200 {object} models.Linktree
 // @Failure 404 {object} models.Error
 // @Security token
-// @Router /linktree/{id}/addbio [post]
+// @Router /linktree/{id}/addbio [put]
 func addBiotoTree(c *gin.Context) {
 	id := c.Param("id")
 	var bio string
@@ -182,7 +176,7 @@ func addBiotoTree(c *gin.Context) {
 // @Success 200 {object} models.Linktree
 // @Failure 404 {object} models.Error
 // @Security token
-// @Router /linktree/{id}/addfullname [post]
+// @Router /linktree/{id}/addfullname [put]
 func addFullnametoTree(c *gin.Context) {
 	id := c.Param("id")
 	var fullname string
@@ -251,6 +245,27 @@ func deleteLinkByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, result)
 }
 
+// @Summary update visits count for a link
+// @Produce json
+// @Param id path string true "tree id"
+// @Param link_id header string true "link id"
+// @Success 200 {object} models.Linktree
+// @Failure 404 {object} models.Error
+// @Router /linktree/{id}/addvisit [put]
+func addVisit(c *gin.Context) {
+	tree_id := c.Param("id")
+	link_id := c.GetHeader("link_id")
+	
+	result, err := database.AddVisit(tree_id,link_id)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+		return
+	}
+	fmt.Println(result.Links[0].Visits)
+	c.IndentedJSON(http.StatusOK, result)
+
+}
+
 func authentication(c *gin.Context) {
 	clientToken := c.Request.Header.Get("token")
 	if clientToken == "" {
@@ -279,15 +294,15 @@ func Linktreeserver() *gin.Engine {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	router.POST("/linktree/signup", signup)
 	router.POST("/linktree/login", login)
-
+	router.GET("/linktree/:id", getLinktreeByID)
+	router.PUT("/linktree/:id/addvisit", addVisit)
 	authorized := router.Group("/")
 	authorized.Use(authentication)
 	{
 		authorized.POST("/linktree", addLinktree)
-		authorized.GET("/linktree/:id", getLinktreeByID)
-		authorized.POST("/linktree/:id/addlink", addLinktoTree)
-		authorized.POST("/linktree/:id/addbio", addBiotoTree)
-		authorized.POST("/linktree/:id/addfullname", addFullnametoTree)
+		authorized.PUT("/linktree/:id/addlink", addLinktoTree)
+		authorized.PUT("/linktree/:id/addbio", addBiotoTree)
+		authorized.PUT("/linktree/:id/addfullname", addFullnametoTree)
 		authorized.PUT("/linktree/:id/updatelink", updateLinkByID)
 		authorized.DELETE("/linktree/:id/deletelink", deleteLinkByID)
 	}

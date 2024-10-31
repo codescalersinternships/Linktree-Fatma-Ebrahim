@@ -30,12 +30,11 @@ const handlesubmit = async () => {
             })
             if (response.status == 200) {
                 const data = await response.json()
-                localStorage.setItem("token", data.token)
-                router.push("/tree")
+                localStorage.setItem("token", data.Token)
+                router.push("/tree/" + data.LinkTreeID)
             } else if (response.status == 400) {
                 alert("Unauthorized user, please sign up or try again")
             }
-            console.log(response)
         }
         catch (err) {
             console.log(err)

@@ -23,8 +23,9 @@ const routes = [
     component: LoginView
   },
   {
-    path: '/tree',
+    path: '/tree/:id',
     name: 'tree',
+    props: true,
     component: TreeView
   },
   {

@@ -1,28 +1,100 @@
 <template>
     <div class="tree">
-        <img src="../assets/tree.svg" width="100" alt="logo">
-        <h1>fullname</h1>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam at est eveniet libero.</p>
+        <img src="../assets/tree.svg" width="100" alt="Tree Logo">
+        <h1>{{ tree.fullname }}</h1>
+        <p>{{ tree.bio }}</p>
         <ul>
-            <li>link</li>
-            <li>link</li>
-            <li>link</li>
+            <li class="link-item" v-for="(link, index) in tree.links" :key="index" @click="handlelinkclick(link)">
+                <img src="../assets/link.svg" width="20" alt="Link Icon" class="link-icon" />
+                <span>{{ link.Name }}</span>
+            </li>
         </ul>
-        <router-link to="/edit"><button class="btn">Edit</button></router-link>
+        <router-link to="/edit">
+            <button class="btn">Edit</button>
+        </router-link>
     </div>
 </template>
+
+<script setup>
+import router from '@/router';
+import { onMounted, reactive, ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const tree = reactive({
+    ID: route.params.id,
+    fullname: '',
+    bio: '',
+    links: [{
+        Link: "",
+        Name: "",
+        Visits: "",
+        ID: ""
+    }],
+});
+
+onMounted(async () => {
+    try {
+        const tree_id = route.params.id
+        const token = localStorage.getItem("token");
+        const response = await fetch('/linktree/' + tree_id, {
+            method: 'GET',
+            headers: {
+                token: token,
+            },
+        });
+
+        if (response.status === 200) {
+            const data = await response.json()
+            tree.fullname = data.Fullname
+            tree.bio = data.Bio
+            tree.links = data.Links
+           
+
+        } else if (response.status === 404) {
+            alert('Tree not found');
+        }
+    } catch (err) {
+        console.log(err);
+    }
+})
+
+const handlelinkclick = async (link) => {
+    if (localStorage.getItem("token") == null) {
+        try {
+            const response = await fetch(`/linktree/${tree.ID}/addvisit`, {
+                method: 'PUT',
+                headers: {
+                    'link_id': link.ID,
+                },
+            })
+            const data = await response.json()
+            window.open(link.Link, '_blank');
+
+        }
+        catch (err) {
+            console.log(err)
+        }
+    }else{
+        window.open(link.Link, '_blank');
+    }
+
+
+}
+
+</script>
+
 
 <style scoped>
 .tree {
     padding-top: 100px;
-    margin: 0px;
+    margin: 0;
     width: 100vw;
     height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: start;
-
 }
 
 img:hover {
@@ -49,27 +121,37 @@ ul {
     justify-content: center;
     list-style: none;
     padding: 10px;
-    margin: 0px;
-
+    margin: 0;
 }
 
 li {
+    margin: 10px;
+    width: 40%;
+}
+li:hover{
+    cursor: pointer;
+}
 
+.link-item {
     background: #90a2a4;
     border-radius: 5px;
     padding: 15px;
-    margin: 10px;
-    width: 60%;
-
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #F2F3EB;
+    transition: transform 0.3s ease-in-out;
 }
-li:hover{
-cursor: pointer;
 
-transform: scale(1.01);
-transition: 0.3s ease-in-out
+.link-item:hover {
+    transform: scale(1.01);
 }
+
+.link-icon {
+    margin-right: 10px;
+}
+
 .btn {
-   
     padding: 10px;
     width: 150px;
     height: 40px;

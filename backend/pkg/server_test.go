@@ -141,31 +141,6 @@ func TestTreeAPIs(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, response.Code)
 	})
 
-	t.Run("test get linktree by id with authorized user", func(t *testing.T) {
-		tree := models.Linktree{
-			Fullname: "Test User",
-			Bio:      "This is a test bio",
-			Links:    []models.Link{},
-		}
-		router := Linktreeserver()
-		response := httptest.NewRecorder()
-		tree_id := user.LinkTreeID.Hex()
-		request, err := http.NewRequest("GET", "/linktree/"+tree_id, nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		request.Header.Set("token", user.Token)
-
-		router.ServeHTTP(response, request)
-		gottree := models.Linktree{}
-		err = json.Unmarshal(response.Body.Bytes(), &gottree)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assert.Equal(t, http.StatusOK, response.Code)
-		assert.Equal(t, tree.Bio, gottree.Bio)
-		assert.Equal(t, tree.Fullname, gottree.Fullname)
-	})
 	t.Run("test add linktree with unauthorized user", func(t *testing.T) {
 		router := Linktreeserver()
 		response := httptest.NewRecorder()
@@ -192,7 +167,12 @@ func TestTreeAPIs(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, response.Code)
 	})
 
-	t.Run("test get linktree by id with unauthorized user", func(t *testing.T) {
+	t.Run("test get linktree by id ", func(t *testing.T) {
+		tree := models.Linktree{
+			Fullname: "Test User",
+			Bio:      "This is a test bio",
+			Links:    []models.Link{},
+		}
 		router := Linktreeserver()
 		response := httptest.NewRecorder()
 		tree_id := user.LinkTreeID.Hex()
@@ -200,23 +180,23 @@ func TestTreeAPIs(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		request.Header.Set("token", "testtoken")
+		request.Header.Set("token", user.Token)
 
 		router.ServeHTTP(response, request)
-		got := gin.H{}
-		err = json.Unmarshal(response.Body.Bytes(), &got)
+		gottree := models.Linktree{}
+		err = json.Unmarshal(response.Body.Bytes(), &gottree)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assert.Equal(t, got["error"], "Invalid token")
-		assert.Equal(t, http.StatusUnauthorized, response.Code)
+		assert.Equal(t, http.StatusOK, response.Code)
+		assert.Equal(t, tree.Bio, gottree.Bio)
+		assert.Equal(t, tree.Fullname, gottree.Fullname)
 	})
 
 }
 
 func TestLinkAPIs(t *testing.T) {
 	user, err := signupHelper()
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -239,7 +219,7 @@ func TestLinkAPIs(t *testing.T) {
 		}
 
 		endpoint := fmt.Sprintf("/linktree/%s/addlink", user.LinkTreeID.Hex())
-		request, err := http.NewRequest("POST", endpoint, bytes.NewReader(linkbytes))
+		request, err := http.NewRequest("PUT", endpoint, bytes.NewReader(linkbytes))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -260,7 +240,7 @@ func TestLinkAPIs(t *testing.T) {
 		}
 
 		endpoint := fmt.Sprintf("/linktree/%s/addlink", user.LinkTreeID.Hex())
-		request, err := http.NewRequest("POST", endpoint, bytes.NewReader(linkbytes))
+		request, err := http.NewRequest("PUT", endpoint, bytes.NewReader(linkbytes))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -286,7 +266,7 @@ func TestLinkAPIs(t *testing.T) {
 		}
 
 		endpoint := fmt.Sprintf("/linktree/%s/addlink", primitive.NewObjectID().Hex())
-		request, err := http.NewRequest("POST", endpoint, bytes.NewReader(linkbytes))
+		request, err := http.NewRequest("PUT", endpoint, bytes.NewReader(linkbytes))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -314,7 +294,7 @@ func TestLinkAPIs(t *testing.T) {
 		}
 
 		endpoint := fmt.Sprintf("/linktree/%s/addbio", user.LinkTreeID.Hex())
-		request, err := http.NewRequest("POST", endpoint, bytes.NewReader(biobytes))
+		request, err := http.NewRequest("PUT", endpoint, bytes.NewReader(biobytes))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -342,7 +322,7 @@ func TestLinkAPIs(t *testing.T) {
 		}
 
 		endpoint := fmt.Sprintf("/linktree/%s/addfullname", user.LinkTreeID.Hex())
-		request, err := http.NewRequest("POST", endpoint, bytes.NewReader(fullnamebytes))
+		request, err := http.NewRequest("PUT", endpoint, bytes.NewReader(fullnamebytes))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -433,7 +413,7 @@ func TestLinkAPIs(t *testing.T) {
 		}
 
 		assert.Equal(t, http.StatusOK, response.Code)
-		assert.Equal(t, 2, len(gottree.Links))
+		assert.Equal(t, 3, len(gottree.Links))
 		assert.NotContains(t, gottree.Links, link)
 
 	})
@@ -471,8 +451,31 @@ func TestLinkAPIs(t *testing.T) {
 
 		assert.Equal(t, got["Message"], "link not found in linktree")
 		assert.Equal(t, http.StatusBadRequest, response.Code)
-		assert.Equal(t, 2, len(tree.Links))
+		assert.Equal(t, 3, len(tree.Links))
 
+	})
+	t.Run("test add visits", func(t *testing.T) {
+		tree, err := gettreeHelper(&user)
+		if err != nil {
+			t.Fatal(err)
+		}
+		prev := tree.Links[0].Visits
+		router := Linktreeserver()
+		response := httptest.NewRecorder()
+		endpoint := fmt.Sprintf("/linktree/%s/addvisit", user.LinkTreeID.Hex())
+		request, err := http.NewRequest("PUT", endpoint, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fmt.Println(tree.Links[0])
+		request.Header.Set("link_id", tree.Links[0].ID.Hex())
+		router.ServeHTTP(response, request)
+		updatedTree, err := gettreeHelper(&user)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.Equal(t, prev+1, updatedTree.Links[0].Visits)
+		assert.Equal(t, http.StatusOK, response.Code)
 	})
 }
 
@@ -521,6 +524,11 @@ func addtreeHelper(user *models.User) (models.Linktree, error) {
 			{
 				Name:   "link2",
 				Link:   "https://www.link2.com/",
+				Visits: 5,
+			},
+			{
+				Name:   "link3",
+				Link:   "https://www.link3.com/",
 				Visits: 5,
 			},
 		},

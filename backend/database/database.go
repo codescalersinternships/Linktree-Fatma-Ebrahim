@@ -76,7 +76,6 @@ func AddLinktree(linktree *models.Linktree, user_id primitive.ObjectID) (models.
 }
 
 func GetLinktreebyID(id string) (models.Linktree, error) {
-	fmt.Println("ID: ", id)
 	var linktree models.Linktree
 	ID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -168,4 +167,34 @@ func DeleteLinkByID(id string, link models.Link) (models.Linktree, error) {
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 	err = linktree_col.FindOneAndUpdate(ctx, bson.M{"_id": ID}, update, opts).Decode(&linktree)
 	return linktree, err
+}
+
+func AddVisit(tree_id string,link_id string) (models.Linktree, error) {
+	var linktree models.Linktree
+	treeID, err := primitive.ObjectIDFromHex(tree_id)
+	if err != nil {
+		return linktree, err
+	}
+	linkID, err := primitive.ObjectIDFromHex(link_id)
+	if err != nil {
+		return linktree, err
+	}
+	filter := bson.M{"_id": treeID, "links._id": linkID}
+	err = linktree_col.FindOne(ctx, filter).Decode(&linktree)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return linktree, fmt.Errorf("link not found in linktree")
+		}
+		return linktree, err
+	}
+
+	update := bson.M{"$inc": bson.M{"links.$.visits": 1}}
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	err = linktree_col.FindOneAndUpdate(ctx, filter, update, opts).Decode(&linktree)
+	if err != nil {
+		return linktree, err
+	}
+
+	return linktree, nil
 }

@@ -29,12 +29,11 @@ const handlesubmit = async () => {
         })
         if (response.status == 201) {
             const data = await response.json()
-            localStorage.setItem("token", data.token)
+            localStorage.setItem("token", data.Token)
             router.push("/details")
         } else if (response.status == 400) {
             alert("User already exists, please login or try again")
         }
-        console.log(response.status)
     }
     catch (err) {
         console.log(err)
