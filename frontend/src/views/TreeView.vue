@@ -9,9 +9,9 @@
                 <span>{{ link.Name }}</span>
             </li>
         </ul>
-        <router-link to="/edit">
-            <button class="btn">Edit</button>
-        </router-link>
+        
+            <button class="btn" type="button" @click="handlelinktoedit">Edit</button>
+
     </div>
 </template>
 
@@ -33,6 +33,9 @@ const tree = reactive({
     }],
 });
 
+const handlelinktoedit=()=>{
+    router.push(`/edit/${tree.ID}`)
+}
 onMounted(async () => {
     try {
         const tree_id = route.params.id
@@ -107,7 +110,7 @@ h1 {
 }
 
 p {
-    color: #F2F3EB;
+    color: #C8826B;
     font-size: 17px;
     width: 90%;
 }

@@ -34,8 +34,9 @@ const routes = [
     component: DetailsView
   },
   {
-    path: '/edit',
+    path: '/edit/:id',
     name: 'edit',
+    probs:true,
     component: EditView
   },
 ]
