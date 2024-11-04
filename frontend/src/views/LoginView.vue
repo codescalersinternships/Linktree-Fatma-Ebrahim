@@ -130,4 +130,11 @@ input {
     transform: scale(1.05);
     transition: 0.3s ease-in-out;
 }
+
+@media only screen and (max-width: 800px) {
+  .login {
+    scale: 0.8;
+  }
+
+}
 </style>

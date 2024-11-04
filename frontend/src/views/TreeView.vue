@@ -9,8 +9,8 @@
                 <span>{{ link.Name }}</span>
             </li>
         </ul>
-        
-            <button class="btn" type="button" @click="handlelinktoedit">Edit</button>
+
+        <button class="btn" type="button" @click="handlelinktoedit">Edit</button>
 
     </div>
 </template>
@@ -33,7 +33,7 @@ const tree = reactive({
     }],
 });
 
-const handlelinktoedit=()=>{
+const handlelinktoedit = () => {
     router.push(`/edit/${tree.ID}`)
 }
 onMounted(async () => {
@@ -52,7 +52,7 @@ onMounted(async () => {
             tree.fullname = data.Fullname
             tree.bio = data.Bio
             tree.links = data.Links
-           
+
 
         } else if (response.status === 404) {
             alert('Tree not found');
@@ -78,7 +78,7 @@ const handlelinkclick = async (link) => {
         catch (err) {
             console.log(err)
         }
-    }else{
+    } else {
         window.open(link.Link, '_blank');
     }
 
@@ -131,7 +131,8 @@ li {
     margin: 10px;
     width: 40%;
 }
-li:hover{
+
+li:hover {
     cursor: pointer;
 }
 

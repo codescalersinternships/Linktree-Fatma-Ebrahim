@@ -45,6 +45,7 @@ export default {
 @media only screen and (max-width: 800px) {
   .homepage {
     flex-direction: column;
+    scale: 0.8;
   }
 
 }

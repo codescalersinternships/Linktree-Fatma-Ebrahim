@@ -126,4 +126,11 @@ input {
     transform: scale(1.05);
     transition: 0.3s ease-in-out;
 }
+
+@media only screen and (max-width: 800px) {
+  .signup {
+    scale: 0.8;
+  }
+
+}
 </style>

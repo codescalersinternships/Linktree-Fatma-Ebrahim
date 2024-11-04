@@ -86,6 +86,18 @@ func GetLinktreebyID(id string) (models.Linktree, error) {
 	return linktree, err
 }
 
+func UpdateTree(id string,linktree *models.Linktree) (models.Linktree, error) {
+	var existingTree models.Linktree
+	ID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return existingTree, err
+	}
+	update := bson.M{"$set": bson.M{"links": linktree.Links, "bio": linktree.Bio, "fullname": linktree.Fullname}}
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	err = linktree_col.FindOneAndUpdate(ctx, bson.M{"_id": ID}, update, opts).Decode(&existingTree)
+	return existingTree, err
+}
+
 func AddLink(id string, link models.Link) (models.Linktree, error) {
 	var linktree models.Linktree
 	ID, err := primitive.ObjectIDFromHex(id)
@@ -125,6 +137,8 @@ func AddFullname(id string, fullname string) (models.Linktree, error) {
 	err = linktree_col.FindOneAndUpdate(ctx, bson.M{"_id": ID}, update, opts).Decode(&linktree)
 	return linktree, err
 }
+
+
 
 func UpdateLinkByID(id string, link models.Link) (models.Linktree, error) {
 	var linktree models.Linktree

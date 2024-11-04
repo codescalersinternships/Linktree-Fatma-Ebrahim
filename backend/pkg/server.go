@@ -117,6 +117,32 @@ func getLinktreeByID(c *gin.Context) {
 
 }
 
+// @Summary update tree given its id
+// @Accept json
+// @Produce json
+// @Param   id path string true "linktree id"
+// @Success 200 {object} models.Linktree
+// @Failure 404 {object} models.Error
+// @Security token
+// @Router /linktree/{id}/updatetree [put]
+func updateTree(c *gin.Context) {
+	id := c.Param("id")
+	var newLinktree models.Linktree
+	if err := c.BindJSON(&newLinktree); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+	}
+	for i := range newLinktree.Links {
+		newLinktree.Links[i].ID = primitive.NewObjectID()
+	}
+
+	result, err := database.UpdateTree(id,&newLinktree)
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, models.Error{Message: err.Error()})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, result)
+}
+
 // @Summary add link to linktree
 // @Accept json
 // @Produce json
@@ -181,6 +207,7 @@ func addFullnametoTree(c *gin.Context) {
 	id := c.Param("id")
 	var fullname string
 
+
 	if err := c.BindJSON(&fullname); err != nil {
 		log.Fatal(err)
 	}
@@ -192,15 +219,17 @@ func addFullnametoTree(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, result)
 }
 
+
+
 // @Summary update link in linktree
 // @Accept json
 // @Produce json
 // @Param   id path string true "linktree id"
-// @Param  link body models.Link true "link"
+// @Param  linktree body models.Linktree true "linktree"
 // @Success 200 {object} models.Linktree
 // @Failure 404 {object} models.Error
 // @Security token
-// @Router /linktree/{id}/updatelink [put]
+// @Router /linktree/{id} [put]
 func updateLinkByID(c *gin.Context) {
 	id := c.Param("id")
 	var link models.Link
@@ -300,12 +329,14 @@ func Linktreeserver() *gin.Engine {
 	authorized.Use(authentication)
 	{
 		authorized.POST("/linktree", addLinktree)
+		authorized.PUT("/linktree/:id", updateTree)
 		authorized.PUT("/linktree/:id/addlink", addLinktoTree)
 		authorized.PUT("/linktree/:id/addbio", addBiotoTree)
 		authorized.PUT("/linktree/:id/addfullname", addFullnametoTree)
 		authorized.PUT("/linktree/:id/updatelink", updateLinkByID)
 		authorized.DELETE("/linktree/:id/deletelink", deleteLinkByID)
 	}
+
 
 	return router
 }

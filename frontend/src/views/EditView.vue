@@ -1,38 +1,45 @@
 <template>
     <div class="edit">
-        <img class="logo" src="../assets/tree.svg" width="100" alt="Tree Logo">
-        <div class="fname-group">
-            <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Link Icon" />
-            <input class="fullname" type="text" name="fullname" value={{tree.fullname}} placeholder="Enter Fullname"
-                v-model="tree.fullname" @change="handlefullnamechange" />
-        </div>
-        <div class="bio-group">
-            <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Edit Icon" />
-
-            <input class="bio" type="text" name="bio" value={{tree.bio}} placeholder="Enter Bio" v-model="tree.bio"
-                @change="handlebiochange" />
-        </div>
-        <ul>
-            <li class="link-item" v-for="(link, index) in tree.links" :key="index" @change="handlelinkchange(index)">
+        <form @submit.prevent="handlesubmit">
+            <img class="logo" src="../assets/tree.svg" width="100" alt="Tree Logo">
+            <div class="fname-group">
+                <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Link Icon" />
+                <input class="fullname" type="text" name="fullname" value={{tree.fullname}} placeholder="Enter Fullname"
+                    v-model="tree.fullname" />
+            </div>
+            <div class="bio-group">
                 <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Edit Icon" />
 
-                <input class="name" type="text" :placeholder="'Enter Link Name ' + (index + 1)" value={{link.Name}}
-                    v-model="tree.links[index].Name" />
-                <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Edit Icon"/>
+                <input class="bio" type="text" name="bio" value={{tree.bio}} placeholder="Enter Bio"
+                    v-model="tree.bio" />
+            </div>
+            <ul>
+                <li class="link-item" v-for="(link, index) in tree.links" :key="index">
+                    <div class="link-group">
+                        <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Edit Icon" />
 
-                <input class="link" type="text" :placeholder="'Enter Link URL ' + (index + 1)" value={{link.Link}}
-                    v-model="tree.links[index].Link" />
-                    <img class="delete-icon" src="../assets/delete.svg" width="20" alt="Delete Icon" @click="deletelink(index)" />
+                        <input class="name" type="text" :placeholder="'Enter Link Name ' + (index + 1)"
+                            value={{link.Name}} v-model="tree.links[index].Name" />
+                    </div>
+                    <div class="link-group">
+                        <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Edit Icon" />
 
-            </li>
+                        <input class="link" type="text" :placeholder="'Enter Link URL ' + (index + 1)"
+                            value={{link.Link}} v-model="tree.links[index].Link" />
+                    </div>
+                    <img class="delete-icon" src="../assets/delete.svg" width="20" alt="Delete Icon"
+                        @click="handledeltelink(index)" />
+
+                </li>
+            </ul>
             <div class="btns">
                 <button class="btn-left" type="button" @click="addLinkField">Add link</button>
-                <button class="btn-right" type="button" @click="addLinkField">Save</button>
+                <input class="btn-right" type="button" @click="handlesubmit" value="Save">
 
             </div>
 
-        </ul>
 
+        </form>
     </div>
 </template>
 
@@ -55,25 +62,69 @@ const tree = reactive({
 });
 const addLinkField = () => {
     tree.links.push({
-        link: "",
-        name: ""
+        Link: "",
+        Name: ""
     });
 };
 
-
-const handlelinkchange = (index) => {
-    console.log(tree.links[index].ID, tree.links[index].Name, tree.links[index].Link)
-}
-const handlefullnamechange = () => {
-    console.log(tree.fullname)
-}
-const handlebiochange = () => {
-    console.log(tree.bio)
+const handledeltelink = (index) => {
+    if (tree.links.length == 1) {
+        alert("Please add at least one link");
+        return
+    }
+    tree.links.splice(index, 1);
 }
 
-const deletelink = (index) => {
 
-    console.log(tree.links[index].ID)
+const handlesubmit = async () => {
+    if (tree.fullname == "" || tree.bio == "") {
+        alert("Please add your fullname and bio");
+        return
+    }
+    if (tree.links.length == 0) {
+        alert("Please add at least one link");
+        return
+    }
+    else {
+        tree.links = tree.links.filter(link => {
+            if (link.Name === "" && link.Link === "") {
+                return false;
+            } else if (link.Name === "" || link.Link === "") {
+                alert("Please fill all links fields");
+                return true;
+            }
+            return true;
+        });
+
+    }
+    try {
+
+        const token = localStorage.getItem("token");
+        console.log(token);
+        const response = await fetch('/linktree/' + tree.ID, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                token: token,
+            },
+            body: JSON.stringify(tree),
+        })
+        if (response.status === 200) {
+            const data = await response.json()
+            router.push('/tree/' + tree.ID);
+
+        } else if (response.status === 400) {
+            alert('Unauthorized user, please sign up');
+        }
+        else if (response.status === 404) {
+            alert('Tree not found');
+        }
+
+
+    }
+    catch (err) {
+        console.log(err);
+    }
 }
 
 onMounted(async () => {
@@ -109,7 +160,7 @@ onMounted(async () => {
 
 
 <style scoped>
-.edit {
+form {
     padding-top: 100px;
     margin: 0;
     width: 100vw;
@@ -119,6 +170,7 @@ onMounted(async () => {
     align-items: center;
     justify-content: start;
 }
+
 
 .logo:hover {
     transform: rotate(-15deg);
@@ -133,7 +185,7 @@ onMounted(async () => {
     font-size: 20px;
     text-align: center;
     height: 30px;
-    width: 30%;
+    width: 40%;
     border-radius: 5px;
     background: #F2F3EB;
     display: flex;
@@ -144,8 +196,8 @@ onMounted(async () => {
 .fullname {
     color: #8d565f;
     border: none;
-    font-size: 20px;
-    margin-left: 20px;
+    font-size: 17px;
+    margin-left: 10px;
     width: 80%;
     height: 100%;
     border-radius: 5px;
@@ -154,19 +206,38 @@ onMounted(async () => {
 
 .edit-icon {
     margin-left: 10px;
-    margin-right: 10px;
+    margin-right: 5px;
 }
+
 .delete-icon {
     margin-left: 20px;
     margin-right: 10px;
+    margin: 10px;
 }
-.delete-icon:hover{
+
+.delete-icon:hover {
     cursor: pointer;
     transform: scale(1.05);
     transition: transform 0.3s ease-in-out;
 }
 
 .bio-group {
+    margin: 5px;
+    padding: 5px;
+    color: #8d565f;
+    border: none;
+    font-size: 20px;
+    text-align: center;
+    height: 30px;
+    width: 60%;
+    border-radius: 5px;
+    background: #F2F3EB;
+    display: flex;
+    flex-direction: row;
+
+}
+
+.link-group {
     margin: 5px;
     padding: 5px;
     color: #8d565f;
@@ -182,11 +253,11 @@ onMounted(async () => {
 
 }
 
+
 .bio {
     color: #8d565f;
-    font-size: 17px;
-    font-size: 20px;
-    margin-left: 20px;
+    font-size: 15px;
+    margin-left: 10px;
     width: 80%;
     height: 100%;
     border-radius: 5px;
@@ -254,6 +325,7 @@ input:focus {
 
 .link-icon {
     margin-right: 10px;
+
 }
 
 .btns {
@@ -304,5 +376,75 @@ input:focus {
     color: #8d565f;
     transform: scale(1.05);
     transition: 0.3s ease-in-out;
+}
+
+@media only screen and (max-width: 800px) {
+
+    form {
+        scale: 0.8;
+    }
+
+    .link-item {
+        width: 90%;
+        background: #F2F3EB;
+        border-radius: 5px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: #8d565f;
+        transition: transform 0.3s ease-in-out;
+
+    }
+
+    .link-group {
+        margin: 5px;
+        padding: 5px;
+        color: #8d565f;
+        border: none;
+        font-size: 20px;
+        text-align: center;
+        height: 30px;
+        width: 100%;
+        border-radius: 5px;
+        background: #F2F3EB;
+        display: flex;
+        flex-direction: row;
+
+    }
+
+    li .name {
+        margin-left: 15px;
+        font-size: 15px;
+        color: #8d565f;
+        background: #F2F3EB;
+        width: 80%;
+        height: 30px;
+        border: none;
+        border-radius: 5px;
+    }
+
+    li .link {
+        color: #8d565f;
+        margin-left: 15px;
+        background: #F2F3EB;
+        width: 80%;
+        height: 40px;
+        border: none;
+        border-radius: 5px;
+        font-size: 15px;
+    }
+
+    .btns {
+        width: 90%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+
+
+
 }
 </style>
