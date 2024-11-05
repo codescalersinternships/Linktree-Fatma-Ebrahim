@@ -1,7 +1,8 @@
 <template>
-    <div class="edit">
+    <div class="details">
         <form @submit.prevent="handlesubmit">
             <img class="logo" src="../assets/tree.svg" width="100" alt="Tree Logo">
+            <h1>Add all your Details and Links</h1>
             <div class="fname-group">
                 <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Link Icon" />
                 <input class="fullname" type="text" name="fullname" placeholder="Enter Fullname"
@@ -10,8 +11,7 @@
             <div class="bio-group">
                 <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Edit Icon" />
 
-                <input class="bio" type="text" name="bio" placeholder="Enter Bio"
-                    v-model="tree.bio" />
+                <input class="bio" type="text" name="bio" placeholder="Enter Bio" v-model="tree.bio" />
             </div>
             <ul>
                 <li class="link-item" v-for="(link, index) in tree.links" :key="index">
@@ -25,7 +25,7 @@
                         <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Edit Icon" />
 
                         <input class="link" type="text" :placeholder="'Enter Link URL ' + (index + 1)"
-                           v-model="tree.links[index].Link" />
+                            v-model="tree.links[index].Link" />
                     </div>
                     <img class="delete-icon" src="../assets/delete.svg" width="20" alt="Delete Icon"
                         @click="handledeltelink(index)" />
@@ -65,57 +65,72 @@ const addLinkField = () => {
 };
 
 const handledeltelink = (index) => {
-    if (tree.links.length == 1) {
-        alert("Please add at least one link");
-        return
-    }
     tree.links.splice(index, 1);
 }
 
 const handlesubmit = async () => {
+
     if (tree.fullname == "" || tree.bio == "") {
         alert("Please add your fullname and bio");
-    } else {
-        try {
-
-            const token = localStorage.getItem("token");
-            const response = await fetch('/linktree', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    token: token,
-                },
-                body: JSON.stringify(tree),
-            });
-
-            if (response.status === 201) {
-                const data = await response.json()
-                router.push('/tree/' + data.LinkTreeID);
-
-            } else if (response.status === 400) {
-                alert('Unauthorized user, please sign up');
-            }
-        } catch (err) {
-            console.log(err);
-        }
+        return
     }
+    tree.links = tree.links.filter(link => {
+        if (link.Name === "" && link.Link === "") {
+            return false;
+        } else if (link.Name === "" || link.Link === "") {
+            alert("Please fill all links fields");
+            return true;
+        }
+        return true;
+    });
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch('/linktree', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                token: token,
+            },
+            body: JSON.stringify(tree),
+
+        });
+
+        if (response.status === 201) {
+            const data = await response.json()
+            localStorage.setItem("tree_id", data.LinkTreeID)
+            router.push('/tree/' + data.LinkTreeID);
+
+
+        } else if (response.status === 400) {
+            alert('Unauthorized user, please sign up');
+        }
+    } catch (err) {
+        console.log(err);
+    }
+
 };
 </script>
 
 
 <style scoped>
+.details {
+    width: 90%;
+    height: 100%;
+}
+
 form {
-    padding-top: 100px;
+    padding-top: 50px;
     margin: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: start;
 }
-
-
+h1 {
+    color: #C8826B;
+}
 .logo:hover {
     transform: rotate(-15deg);
     transition: 0.3s ease-in-out;
@@ -220,6 +235,7 @@ ul {
     padding: 10px;
     margin: 0;
 }
+
 li input {
     width: 100%;
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="homepage">
     <div class="right">
-      <img src="../assets/tree.svg" width="240" alt="logo">
+      <img src="../assets/tree.svg" width="220" alt="logo">
     </div>
     <div class="left">
       <h1>Welcome To Linktree App</h1>
@@ -20,20 +20,14 @@
   </div>
 </template>
 
-<script>
 
-export default {
-  name: 'HomeView',
-
-}
-</script>
 
 <style scoped>
 .homepage {
-  padding: 0px;
-  margin: 0px;
-  width: 100vw;
-  height: 100vh;
+  padding: 10px;
+  padding-top: 180px;
+  width: 90%;
+  height: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -44,6 +38,7 @@ export default {
 
 @media only screen and (max-width: 800px) {
   .homepage {
+    padding-top: 50px;
     flex-direction: column;
     scale: 0.8;
   }
@@ -91,7 +86,7 @@ p {
 .btn-right {
   margin: 10px;
   padding: 10px;
-  width: 120px;
+  width: 150px;
   height: 40px;
   background: #C8826B;
   border: none;
@@ -112,7 +107,7 @@ p {
 .btn-left {
   margin: 10px;
   padding: 10px;
-  width: 120px;
+  width: 150px;
   height: 40px;
   background: #90a2a4;
   border: none;

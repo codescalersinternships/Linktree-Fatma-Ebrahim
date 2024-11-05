@@ -19,7 +19,16 @@ const user = reactive({
     password: ""
 })
 const handlesubmit = async () => {
+    if (user.username == "" || user.email == ""|| user.password == "") {
+        alert("Empty fields, please enter username, email and password")
+        return
+    } else if (user.password.length < 8) {
+        alert("Password must be at least 8 characters long")
+        return
+    } 
+    else{
     try {
+        
         const response = await fetch("/linktree/signup", {
             method: "POST",
             headers: {
@@ -38,7 +47,7 @@ const handlesubmit = async () => {
     catch (err) {
         console.log(err)
     }
-
+    }
 }
 
 </script>
@@ -46,8 +55,8 @@ const handlesubmit = async () => {
 .signup {
     padding: 0px;
     margin: 0px;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;

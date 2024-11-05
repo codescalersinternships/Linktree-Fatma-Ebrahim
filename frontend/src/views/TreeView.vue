@@ -40,7 +40,7 @@ const tree = reactive({
 });
 
 const handlelinktoedit = () => {
-    router.push(`/edit/${tree.ID}`)
+    router.push("/edit")
 }
 onMounted(async () => {
     try {
@@ -58,10 +58,12 @@ onMounted(async () => {
             tree.fullname = data.Fullname
             tree.bio = data.Bio
             tree.links = data.Links
+            console.log(tree)
 
 
         } else if (response.status === 404) {
             alert('Tree not found');
+            router.push('/');
         }
     } catch (err) {
         console.log(err);
@@ -97,10 +99,10 @@ const handlelinkclick = async (link) => {
 
 <style scoped>
 .tree {
-    padding-top: 100px;
+    padding-top: 50px;
     margin: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 90%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;

@@ -2,6 +2,7 @@
     <div class="edit">
         <form @submit.prevent="handlesubmit">
             <img class="logo" src="../assets/tree.svg" width="100" alt="Tree Logo">
+            <h1>Edit your Details and Links</h1>
             <div class="fname-group">
                 <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Link Icon" />
                 <input class="fullname" type="text" name="fullname" value={{tree.fullname}} placeholder="Enter Fullname"
@@ -68,15 +69,17 @@ const addLinkField = () => {
 };
 
 const handledeltelink = (index) => {
-    if (tree.links.length == 1) {
-        alert("Please add at least one link");
-        return
-    }
     tree.links.splice(index, 1);
 }
 
 
 const handlesubmit = async () => {
+    const tree_id = localStorage.getItem("tree_id");
+    if (tree_id == null) {
+        alert("Please add tree details first");
+        router.push('/details');
+        return
+    }
     if (tree.fullname == "" || tree.bio == "") {
         alert("Please add your fullname and bio");
         return
@@ -85,23 +88,20 @@ const handlesubmit = async () => {
         alert("Please add at least one link");
         return
     }
-    else {
-        tree.links = tree.links.filter(link => {
-            if (link.Name === "" && link.Link === "") {
-                return false;
-            } else if (link.Name === "" || link.Link === "") {
-                alert("Please fill all links fields");
-                return true;
-            }
+    tree.links = tree.links.filter(link => {
+        if (link.Name === "" && link.Link === "") {
+            return false;
+        } else if (link.Name === "" || link.Link === "") {
+            alert("Please fill all links fields");
             return true;
-        });
+        }
+        return true;
+    });
 
-    }
     try {
 
         const token = localStorage.getItem("token");
-        console.log(token);
-        const response = await fetch('/linktree/' + tree.ID, {
+        const response = await fetch('/linktree/' + tree_id, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -128,9 +128,13 @@ const handlesubmit = async () => {
 }
 
 onMounted(async () => {
-    console.log(tree.ID)
+    const tree_id = localStorage.getItem("tree_id");
+    if (tree_id == null) {
+        alert("Please add tree details first");
+        router.push('/details');
+        return
+    }
     try {
-        const tree_id = route.params.id
         const token = localStorage.getItem("token");
         const response = await fetch('/linktree/' + tree_id, {
             method: 'GET',
@@ -160,18 +164,24 @@ onMounted(async () => {
 
 
 <style scoped>
+.edit{
+    width: 90%;
+    height: 100%;
+}
 form {
-    padding-top: 100px;
+    padding-top: 50px;
     margin: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: start;
 }
 
-
+h1 {
+    color: #C8826B;
+}
 .logo:hover {
     transform: rotate(-15deg);
     transition: 0.3s ease-in-out;

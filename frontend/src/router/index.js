@@ -34,9 +34,8 @@ const routes = [
     component: DetailsView
   },
   {
-    path: '/edit/:id',
+    path: '/edit',
     name: 'edit',
-    probs:true,
     component: EditView
   },
 ]
@@ -51,7 +50,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
 
-  if (to.path === "/login" || to.path === "/signup" || to.path.startsWith("/tree") || token) {
+  if (to.path === "/" ||to.path === "/login" || to.path === "/signup" || to.path.startsWith("/tree") || token) {
     next();
     console.log("Token found, allowing access");
   } else {
