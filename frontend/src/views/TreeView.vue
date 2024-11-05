@@ -1,12 +1,18 @@
 <template>
     <div class="tree">
-        <img src="../assets/tree.svg" width="100" alt="Tree Logo">
+        <img class="logo" src="../assets/tree.svg" width="100" alt="Tree Logo">
         <h1>{{ tree.fullname }}</h1>
         <p>{{ tree.bio }}</p>
         <ul>
             <li class="link-item" v-for="(link, index) in tree.links" :key="index" @click="handlelinkclick(link)">
                 <img src="../assets/link.svg" width="20" alt="Link Icon" class="link-icon" />
                 <span>{{ link.Name }}</span>
+                <div class="views">
+                    <span> {{ link.Visits }}</span> <img src="../assets/views.svg" width="20" alt="Link Icon"
+                        class="link-icon" />
+                </div>
+
+
             </li>
         </ul>
 
@@ -73,6 +79,7 @@ const handlelinkclick = async (link) => {
             })
             const data = await response.json()
             window.open(link.Link, '_blank');
+            link.Visits+=1
 
         }
         catch (err) {
@@ -100,7 +107,7 @@ const handlelinkclick = async (link) => {
     justify-content: start;
 }
 
-img:hover {
+.logo:hover {
     transform: rotate(-15deg);
     transition: 0.3s ease-in-out;
 }
@@ -141,7 +148,7 @@ li:hover {
     border-radius: 5px;
     padding: 15px;
     display: flex;
-    align-items: center;
+    justify-content: space-between; 
     text-decoration: none;
     color: #F2F3EB;
     transition: transform 0.3s ease-in-out;
@@ -152,9 +159,13 @@ li:hover {
 }
 
 .link-icon {
-    margin-right: 10px;
+    margin-right: 5px;
+    margin-left:5px ;
 }
-
+.views {
+    display: flex;
+    align-items: center;
+}
 .btn {
     padding: 10px;
     width: 150px;

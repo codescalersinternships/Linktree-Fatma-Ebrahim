@@ -51,7 +51,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
 
-  if (to.path === "/login" || to.path === "/signup" || token) {
+  if (to.path === "/login" || to.path === "/signup" || to.path.startsWith("/tree") || token) {
     next();
     console.log("Token found, allowing access");
   } else {
