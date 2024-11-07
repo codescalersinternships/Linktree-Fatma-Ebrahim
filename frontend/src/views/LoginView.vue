@@ -1,7 +1,7 @@
 <template>
     <div class="login">
         <img src="../assets/tree.svg" width="100" alt="logo">
-        <h1>Login</h1>
+        <h1 data-test="login-header">Login</h1>
         <form class="form" @submit.prevent="handlesubmit">
             <input type="text" name="username" placeholder="Enter Username" v-model="user.username">
             <input type="password" name="password" placeholder="Enter Password" v-model="user.password">
@@ -31,6 +31,7 @@ const handlesubmit = async () => {
             if (response.status == 200) {
                 const data = await response.json()
                 localStorage.setItem("token", data.Token)
+                localStorage.setItem("tree_id", data.LinkTreeID)
                 router.push("/tree/" + data.LinkTreeID)
             } else if (response.status == 400) {
                 alert("Unauthorized user, please sign up or try again")
@@ -49,8 +50,8 @@ const handlesubmit = async () => {
 .login {
     padding: 0px;
     margin: 0px;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;

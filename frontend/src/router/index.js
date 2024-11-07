@@ -54,8 +54,8 @@ router.beforeEach((to, from, next) => {
     next();
     console.log("Token found, allowing access");
   } else {
-    console.log("No token found, redirecting to login");
-    next("/login");
+    alert("You are not logged in");
+    next("/");
   }
 });
 

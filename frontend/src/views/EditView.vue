@@ -111,7 +111,8 @@ const handlesubmit = async () => {
         })
         if (response.status === 200) {
             const data = await response.json()
-            router.push('/tree/' + tree.ID);
+            localStorage.setItem("tree_id", data.ID)
+            router.push('/tree/' + data.ID);
 
         } else if (response.status === 400) {
             alert('Unauthorized user, please sign up');
@@ -148,6 +149,7 @@ onMounted(async () => {
             tree.fullname = data.Fullname
             tree.bio = data.Bio
             tree.links = data.Links
+            localStorage.setItem("tree_id", data.ID)
             console.log(tree)
 
 

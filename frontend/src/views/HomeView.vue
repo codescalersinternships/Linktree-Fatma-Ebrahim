@@ -1,24 +1,28 @@
 <template>
   <div class="homepage">
     <div class="right">
-      <img src="../assets/tree.svg" width="220" alt="logo">
+      <img data-test="tree-logo" src="../assets/tree.svg" width="220" alt="logo">
     </div>
     <div class="left">
-      <h1>Welcome To Linktree App</h1>
+      <h1 data-test="welcome-header" >Welcome To Linktree App</h1>
       <p>Save All your links in one place!</p>
       <div class="btns">
         <div class="btn-group">
-          New to Linktree? <router-link to="/signup"><button class="btn-left">Signup</button></router-link>
+          New to Linktree? <router-link to="/signup"><button class="btn-left" data-test="signup-btn">Signup</button></router-link>
 
         </div>
         <div class="btn-group">
-          Have an account? <router-link to="/login"><button class="btn-right">Login</button></router-link>
+          Have an account? <router-link to="/login"><button class="btn-right" data-test="login-btn" >Login</button></router-link>
         </div>
       </div>
 
     </div>
   </div>
 </template>
+<script setup>
+
+</script>
+
 
 
 

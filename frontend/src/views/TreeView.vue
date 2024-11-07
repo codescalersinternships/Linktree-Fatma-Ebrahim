@@ -43,8 +43,12 @@ const handlelinktoedit = () => {
     router.push("/edit")
 }
 onMounted(async () => {
+    const tree_id = route.params.id
+    
+    if (tree_id == null) {
+        alert("Please add tree details first");
+    }
     try {
-        const tree_id = route.params.id
         const token = localStorage.getItem("token");
         const response = await fetch('/linktree/' + tree_id, {
             method: 'GET',
