@@ -2,7 +2,7 @@
     <div class="details">
         <form @submit.prevent="handlesubmit">
             <img class="logo" src="../assets/tree.svg" width="100" alt="Tree Logo">
-            <h1>Add all your Details and Links</h1>
+            <h1 data-test="details-header">Add all your Details and Links</h1>
             <div class="fname-group">
                 <img class="edit-icon" src="../assets/edit.svg" width="15" alt="Link Icon" />
                 <input class="fullname" type="text" name="fullname" placeholder="Enter Fullname"

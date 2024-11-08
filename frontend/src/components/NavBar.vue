@@ -10,7 +10,7 @@
     <router-link to="/edit" class="nav-item" :class="{ active: activeItem === 'edit' }" @click="setActiveItem('edit')">
       Edit
     </router-link>
-    <button class="nav-item" :class="{ active: activeItem === 'logout' }"
+    <button data-test="logout-btn" class="nav-item" :class="{ active: activeItem === 'logout' }"
       @click="() => { handlelogout(); setActiveItem('logout'); }">
       Logout
     </button>
@@ -43,6 +43,7 @@ const handlelogout = () => {
   if (!logout) {
     return;
   }
+  alert("Logout successful");
   localStorage.removeItem("token");
   localStorage.removeItem("tree_id");
   router.push('/');

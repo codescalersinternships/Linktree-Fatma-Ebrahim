@@ -3,9 +3,9 @@
         <img src="../assets/tree.svg" width="100" alt="logo">
         <h1 data-test="login-header">Login</h1>
         <form class="form" @submit.prevent="handlesubmit">
-            <input type="text" name="username" placeholder="Enter Username" v-model="user.username">
-            <input type="password" name="password" placeholder="Enter Password" v-model="user.password">
-            <input class="btn" type="submit" value="Login">
+            <input data-test="username-input" type="text" name="username" placeholder="Enter Username" v-model="user.username">
+            <input data-test="password-input" type="password" name="password" placeholder="Enter Password" v-model="user.password">
+            <input  data-test="submit-btn" class="btn" type="submit" value="Login">
         </form>
     </div>
 </template>
